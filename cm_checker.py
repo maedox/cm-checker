@@ -34,18 +34,18 @@ if not os.path.isfile(config_file):
 	else:
 		config.set("CMC", "notify_via_email", False)
 
-	send_via_gmail = raw_input("Send email via your Gmail account? (Y/n): ")
-	if re.match("[yY].*", send_via_gmail) or not send_via_gmail:
-		config.set("CMC", "send_via_gmail", True)
+	send_with_gmail = raw_input("Send email via your Gmail account? (Y/n) (If no, will use local SMTP): ")
+	if re.match("[yY].*", send_with_gmail) or not send_with_gmail:
+		config.set("CMC", "send_with_gmail", True)
 
-		gmail_username = raw_input("Your Gmail username: ")
+		gmail_username = raw_input("Gmail username: ")
 		config.set("CMC", "gmail_username", gmail_username)
 
-		gmail_password = getpass.getpass("Your Gmail password: ")
+		gmail_password = getpass.getpass("Gmail password: ")
 		config.set("CMC", "gmail_password", gmail_password)
 
 	else:
-		config.set("CMC", "send_via_gmail", False)
+		config.set("CMC", "send_with_gmail", False)
 		config.set("CMC", "gmail_username", "")
 		config.set("CMC", "gmail_password", "")
 
@@ -58,30 +58,29 @@ if not os.path.isfile(config_file):
 	with open(config_file, "wb") as f:
 		config.write(f)
 
+	print("Configuration was written to {}".format(config_file))
+
+
 config.read(config_file)
 
 download_url = config.get("CMC", "download_url")
 changelog_url = config.get("CMC", "changelog_url")
 google_apps_url = config.get("CMC", "google_apps_url")
 log_dir = config.get("CMC", "log_dir")
+
 notify_via_email = config.getboolean("CMC", "notify_via_email")
-send_via_gmail = config.getboolean("CMC", "send_via_gmail")
+send_with_gmail = config.getboolean("CMC", "send_with_gmail")
+
 gmail_username = config.get("CMC", "gmail_username")
 gmail_password = config.get("CMC", "gmail_password")
+
 email_to = config.get("CMC", "email_to")
 email_subject = config.get("CMC", "email_subject")
 ### /Configuration ###
 
-if not email_to:
-	print("Please check the email settings. No recipient set.")
-	exit(1)
 
 def send_mail(email_body, device):
-	if send_via_gmail:
-
-		if not gmail_username or not gmail_password:
-			print("Please check the email settings. Missing Gmail username or password.")
-			exit(1)
+	if send_with_gmail:
 
 		msg = """\
 From: "{hostname}" <{from_email}>
@@ -164,7 +163,6 @@ def main():
 
 	else:
 		parser.print_help()
-
 		exit(1)
 
 
