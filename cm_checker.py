@@ -31,27 +31,32 @@ if not os.path.isfile(config_file):
 	notify_via_email = raw_input("Send email notifications? (Y/n): ")
 	if re.match("[yY].*", notify_via_email) or not notify_via_email:
 		config.set("CMC", "notify_via_email", True)
+
+		send_with_gmail = raw_input("Send email via your Gmail account? (Y/n) (If no, will use local SMTP): ")
+		if re.match("[yY].*", send_with_gmail) or not send_with_gmail:
+			config.set("CMC", "send_with_gmail", True)
+
+			gmail_username = raw_input("Gmail username: ")
+			config.set("CMC", "gmail_username", gmail_username)
+
+			gmail_password = getpass.getpass("Gmail password: ")
+			config.set("CMC", "gmail_password", gmail_password)
+
+		else:
+			config.set("CMC", "send_with_gmail", False)
+			config.set("CMC", "gmail_username", "")
+			config.set("CMC", "gmail_password", "")
+
+		email_to = raw_input("Recipient email for notifications?: ")
+		if email_to:
+			config.set("CMC", "email_to", email_to)
+
 	else:
 		config.set("CMC", "notify_via_email", False)
-
-	send_with_gmail = raw_input("Send email via your Gmail account? (Y/n) (If no, will use local SMTP): ")
-	if re.match("[yY].*", send_with_gmail) or not send_with_gmail:
-		config.set("CMC", "send_with_gmail", True)
-
-		gmail_username = raw_input("Gmail username: ")
-		config.set("CMC", "gmail_username", gmail_username)
-
-		gmail_password = getpass.getpass("Gmail password: ")
-		config.set("CMC", "gmail_password", gmail_password)
-
-	else:
 		config.set("CMC", "send_with_gmail", False)
 		config.set("CMC", "gmail_username", "")
 		config.set("CMC", "gmail_password", "")
-
-	email_to = raw_input("Recipient email for notifications?: ")
-	if email_to:
-		config.set("CMC", "email_to", email_to)
+		config.set("CMC", "email_to", "")
 
 	config.set("CMC", "email_subject", "CyanogenMod")
 
@@ -127,23 +132,29 @@ def get_releases(devices):
 
 		# Find the actual releases and notify if applicable
 		soup = BeautifulSoup(urlopen(device_url))
-		releases = soup.fetch("a", {"href": re.compile("\.zip")})
+		releases = soup.fetch("a", {"href": re.compile("\.zip|\.torrent")})
 
 		for release in releases:
 			release = release["href"]
 
 			if release not in log_list:
-				with open(log_file, "a") as f:
-					f.write(release + "\n")
-
-				if release[0:4] == "http":
+				if release[:4] == "http" and not "rommanager" in release:
 					email_list.append(release)
-				elif release[0:4] == "/get":
+
+				elif release[:4] == "/get" or release[:9] == "/torrents":
 					email_list.append(download_url + release)
 
+		# Log any new releases
+		if email_list:
+			with open(log_file, "a") as f:
+				for e in email_list:
+					f.write(e + "\n")
+
+		# Send email alert if enabled
 		if email_list and notify_via_email:
-			email_body = "\n".join(email_list)
-			send_mail(email_body, device)
+			with open(log_file, "a") as f:
+				email_body = "\n".join(email_list)
+				send_mail(email_body, device)
 
 
 def main():
