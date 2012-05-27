@@ -26,6 +26,7 @@ if not os.path.isfile(config_file):
 	config.set("CMC", "download_url", "http://get.cm")
 	config.set("CMC", "changelog_url", "http://cm-nightlies.appspot.com/?device=")
 	config.set("CMC", "google_apps_url", "http://goo.im/gapps")
+	config.set("CMC", "exclude_pattern", "rommanager|cm-7")
 	config.set("CMC", "log_dir", os.path.join(os.path.expanduser("~"), "var", "log"))
 
 	notify_via_email = raw_input("Send email notifications? (Y/n): ")
@@ -71,6 +72,10 @@ config.read(config_file)
 download_url = config.get("CMC", "download_url")
 changelog_url = config.get("CMC", "changelog_url")
 google_apps_url = config.get("CMC", "google_apps_url")
+
+exclude_pattern = config.get("CMC", "exclude_pattern")
+if exclude_pattern is "": exclude_pattern = ".\A"
+
 log_dir = config.get("CMC", "log_dir")
 
 notify_via_email = config.getboolean("CMC", "notify_via_email")
@@ -137,11 +142,14 @@ def get_releases(devices):
 		for release in releases:
 			release = release["href"]
 
-			if release not in log_list:
-				if release[:4] == "http" and not "rommanager" in release:
+			if release in log_list or re.search(exclude_pattern, release):
+				continue
+
+			else:
+				if release[:4] == "http":
 					email_list.append(release)
 
-				elif release[:4] == "/get" or release[:9] == "/torrents":
+				elif re.match("/get|/torrents", release):
 					email_list.append(download_url + release)
 
 		# Log any new releases
@@ -150,9 +158,8 @@ def get_releases(devices):
 				for e in email_list:
 					f.write(e + "\n")
 
-		# Send email alert if enabled
-		if email_list and notify_via_email:
-			with open(log_file, "a") as f:
+			# Send email alert if enabled
+			if notify_via_email:
 				email_body = "\n".join(email_list)
 				send_mail(email_body, device)
 
