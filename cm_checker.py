@@ -94,7 +94,7 @@ email_subject = config.get("CMC", "email_subject")
 ### Logging setup ###
 logging.basicConfig(filename=os.path.join(log_dir, "cm_checker.log"),
 		filemode="w", level=log_level,
-		format="%(asctime)s %(levelname)s %(message)s")
+		format="%(asctime)s %(levelname)s: %(message)s")
 log = logging.getLogger(__name__)
 ### /Logging setup ###
 
@@ -127,14 +127,15 @@ Google Apps: {gapps_url}
 	else:
 		os.system("echo '{2}' | mail -s '{0} ({1})' {3}".format(
 			email_subject, device, email_body, email_to))
-		log.info("Email sent using local SMTP")
+		log.info("Email sent using local SMTP daemon")
 
-	log.debug("Email message sent: {}".format(msg))
+	log.debug("Email message sent:\n{}".format(msg))
 
 def get_releases(devices):
 	for device in devices:
 		device_url = "{}/?device={}".format(download_url, device)
 		email_list = []
+		log_list = []
 
 		release_log_file = os.path.join(log_dir, "cm_checker_{}.log".format(device))
 
@@ -147,18 +148,19 @@ def get_releases(devices):
 			log.info("Created log file: {}".format(release_log_file))
 
 		with open(release_log_file, "r") as f:
-			log_list = f.read()
-			log.debug("Read previous releases into the log_list variable")
+			for line in f.readlines():
+				log_list.append(line)
+			log.debug("Read {} previous release(s) from the log file into log_list".format(len(log_list)))
 
 		# Find the actual releases and notify if applicable
 		soup = BeautifulSoup(urlopen(device_url))
 		releases = soup.fetch("a", {"href": re.compile("\.zip|\.torrent")})
-		log.debug("Found {} release(s)".format(len(releases)))
+		log.debug("Found {} release(s) on the website".format(len(releases)))
 
 		for release in releases:
 			release = release["href"]
 
-			if release in log_list or re.search(exclude_pattern, release):
+			if any(release in s for s in log_list) or re.search(exclude_pattern, release):
 				continue
 
 			else:
@@ -172,11 +174,10 @@ def get_releases(devices):
 
 		# Log any new releases
 		if email_list:
-			log.debug("email_list: {}".format(email_list))
 			with open(release_log_file, "a") as f:
 				for e in email_list:
 					f.write(e + "\n")
-				log.info("Logged all found releases in log file: {}".format(log_file))
+				log.info("Logged {} new release(s) in log file: {}".format(len(email_list), release_log_file))
 
 			# Send email alert if enabled
 			if notify_via_email:
