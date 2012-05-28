@@ -28,7 +28,7 @@ if not os.path.isfile(config_file):
 	config.set("CMC", "google_apps_url", "http://goo.im/gapps")
 	config.set("CMC", "exclude_pattern", "rommanager|cm-7")
 	config.set("CMC", "log_dir", os.path.join(os.path.expanduser("~"), "var", "log"))
-	config.set("CMC", "log_level", "INFO # CRITICAL, ERROR, WARNING, INFO, DEBUG")
+	config.set("CMC", "log_level", "INFO")
 
 	notify_via_email = raw_input("Send email notifications? (Y/n): ")
 	if re.match("[yY].*", notify_via_email) or not notify_via_email:
