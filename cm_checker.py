@@ -12,7 +12,7 @@ except ImportError:
 	print("Installation instructions: http://www.crummy.com/software/BeautifulSoup")
 	exit(1)
 
-import ConfigParser, getpass, logging, os, re, smtplib, socket
+import ConfigParser, getpass, logging, logging.handlers, os, re, smtplib, socket
 from urllib2 import urlopen
 
 
@@ -92,10 +92,16 @@ email_subject = config.get("CMC", "email_subject")
 
 
 ### Logging setup ###
-logging.basicConfig(filename=os.path.join(log_dir, "cm_checker.log"),
-		filemode="w", level=log_level,
-		format="%(asctime)s %(levelname)s: %(message)s")
 log = logging.getLogger(__name__)
+log.setLevel(log_level)
+
+log_handler = logging.handlers.RotatingFileHandler(
+		filename=os.path.join(log_dir, "cm_checker.log"),
+		maxBytes=1000000, backupCount=1, encoding="utf-8")
+log_format = logging.Formatter("%(asctime)s %(levelname)s: %(message)s")
+log_handler.setFormatter(log_format)
+
+log.addHandler(log_handler)
 ### /Logging setup ###
 
 def send_mail(email_body, device):
