@@ -162,7 +162,7 @@ def get_releases(devices):
 			soup = BeautifulSoup(urllib2.urlopen(device_url, timeout=5))
 
 		except urllib2.URLError as error_details:
-			log.error("Unable to connect to {0}: {1}".format(device_url, error_details))
+			log.error("Unable to connect to {0}: {1}".format(device_url, str(error_details).strip("<>")))
 			raise
 
 		# Find the actual releases and notify if applicable
