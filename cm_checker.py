@@ -136,10 +136,10 @@ Google Apps: {gapps_url}
 
 	log.debug("Email message sent:\n{0}".format(msg))
 
-def get_releases(devices):
+def get_releases(devices, no_print):
 	for device in devices:
 		device_url = "{0}/?device={1}".format(download_url, device)
-		email_list = []
+		release_list = []
 		log_list = []
 
 		release_log_file = os.path.join(log_dir, "cm_checker_{0}.log".format(device))
@@ -177,23 +177,26 @@ def get_releases(devices):
 
 			else:
 				if release[:4] == "http":
-					email_list.append(release)
+					release_list.append(release)
 					log.debug("Added '{0}' to the email list".format(release))
 
 				elif re.match("/get|/torrents", release):
-					email_list.append(download_url + release)
+					release_list.append(download_url + release)
 					log.debug("Added '{0}' to the email list".format(download_url + release))
 
 		# Log any new releases
-		if email_list:
+		if release_list:
 			with open(release_log_file, "a") as f:
-				for e in email_list:
-					f.write(e + "\n")
-				log.info("Logged {0} new release(s) in log file: {1}".format(len(email_list), release_log_file))
+				for release in release_list:
+					f.write(release + "\n")
+					if not no_print: print(release)
+
+				log.info("Logged {0} new release(s) in log file: {1}".format(len(release_list),
+																			release_log_file))
 
 			# Send email alert if enabled
 			if notify_via_email:
-				email_body = "\n".join(email_list)
+				email_body = "\n".join(release_list)
 				log.info("Attempting to send email notification to {0}".format(email_to))
 				send_mail(email_body, device)
 
@@ -202,15 +205,16 @@ def main():
 	import argparse
 
 	parser = argparse.ArgumentParser(
-			add_help = False,
 			description = "Check for new releases of CyanogenMod for you device.")
 
-	parser.add_argument("-d", dest="devices", metavar="device", nargs="+",
-						help="Specify device name(s)", required=True)
+	parser.add_argument("-d", "--device", dest="devices", metavar="device", nargs="+",
+			help="Device name(s) to search for", required=True)
+	parser.add_argument("-n", "--no-print", dest="no_print", action="store_true",
+			help="Disable printing to stdout/screen")
 
 	args = parser.parse_args()
 
-	get_releases(args.devices)
+	get_releases(args.devices, args.no_print)
 
 
 if __name__ == "__main__":
