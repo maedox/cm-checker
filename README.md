@@ -21,23 +21,29 @@ but all suggestions are welcome. If my code sucks for whatever reason, please te
 
 ## Disclaimer: 
 This software is provided as is. It should be safe, but don't blame me if your computer blows up.
-It is made for GNU/Linux based OS's, but should work on Windows with Python 2.7+, maybe 2.6+.
+It is made for GNU/Linux based OS's, but should work on Windows with Python 2.7+.
 
 
 ## Usage: 
 ```python cm_checker.py -d device-name```
 
-Find you device name at `http://get.cm`
+Find you device name at http://get.cm
 
 ## Crontab example for checking every other hour:
-### Open your crontab:
+Open your crontab: 
+
 ```$ crontab -e```
+
 Then add: 
+
 ```00 */2 * * * ~/bin/cm_checker.py -n -d device```
 
 
 ## Tl;dr:
-No installation needed, just run it. No guarantees what so ever. Let me know what you think.
+- No installation needed, just run it with Python 2.7+. 
+- No guarantees what so ever. 
+- Let me know what you think.
 
-```Twitter: https://twitter.com/#!/maedox/
-Google+: https://plus.google.com/109034374937381314474/```
+Twitter: https://twitter.com/#!/maedox/
+
+Google+: https://plus.google.com/109034374937381314474/
