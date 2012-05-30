@@ -24,7 +24,7 @@ if not os.path.isfile(config_file):
 	config.add_section("CMC")
 
 	config.set("CMC", "download_url", "http://get.cm")
-	config.set("CMC", "changelog_url", "http://cm-nightlies.appspot.com/?device=")
+	config.set("CMC", "changelog_url", "http://cm9log.appspot.com/?device=")
 	config.set("CMC", "google_apps_url", "http://goo.im/gapps")
 	config.set("CMC", "exclude_pattern", "rommanager|cm-7")
 	config.set("CMC", "log_dir", os.path.join(os.path.expanduser("~"), "var", "log"))
@@ -65,7 +65,7 @@ if not os.path.isfile(config_file):
 	with open(config_file, "wb") as f:
 		config.write(f)
 
-	print("Configuration was written to {}".format(config_file))
+	print("Configuration was written to {0}".format(config_file))
 
 
 config.read(config_file)
@@ -135,33 +135,33 @@ Google Apps: {gapps_url}
 			email_subject, device, email_body, email_to))
 		log.info("Email sent using local SMTP daemon")
 
-	log.debug("Email message sent:\n{}".format(msg))
+	log.debug("Email message sent:\n{0}".format(msg))
 
 def get_releases(devices):
 	for device in devices:
-		device_url = "{}/?device={}".format(download_url, device)
+		device_url = "{0}/?device={1}".format(download_url, device)
 		email_list = []
 		log_list = []
 
-		release_log_file = os.path.join(log_dir, "cm_checker_{}.log".format(device))
+		release_log_file = os.path.join(log_dir, "cm_checker_{0}.log".format(device))
 
 		# Create release_log_file if it doesn't exist
 		if not os.path.isdir(log_dir):
 			os.makedirs(log_dir)
-			log.info("Created log directory: {}".format(log_dir))
+			log.info("Created log directory: {0}".format(log_dir))
 		if not os.path.isfile(release_log_file):
 			open(release_log_file, "w").close()
-			log.info("Created log file: {}".format(release_log_file))
+			log.info("Created log file: {0}".format(release_log_file))
 
 		with open(release_log_file, "r") as f:
 			for line in f.readlines():
 				log_list.append(line)
-			log.debug("Read {} previous release(s) from the log file into log_list".format(len(log_list)))
+			log.debug("Read {0} previous release(s) from the log file into log_list".format(len(log_list)))
 
 		# Find the actual releases and notify if applicable
 		soup = BeautifulSoup(urlopen(device_url))
 		releases = soup.fetch("a", {"href": re.compile("\.zip|\.torrent")})
-		log.debug("Found {} release(s) on the website".format(len(releases)))
+		log.debug("Found {0} release(s) on the website".format(len(releases)))
 
 		for release in releases:
 			release = release["href"]
@@ -172,23 +172,23 @@ def get_releases(devices):
 			else:
 				if release[:4] == "http":
 					email_list.append(release)
-					log.debug("Added '{}' to the email list".format(release))
+					log.debug("Added '{0}' to the email list".format(release))
 
 				elif re.match("/get|/torrents", release):
 					email_list.append(download_url + release)
-					log.debug("Added '{}' to the email list".format(download_url + release))
+					log.debug("Added '{0}' to the email list".format(download_url + release))
 
 		# Log any new releases
 		if email_list:
 			with open(release_log_file, "a") as f:
 				for e in email_list:
 					f.write(e + "\n")
-				log.info("Logged {} new release(s) in log file: {}".format(len(email_list), release_log_file))
+				log.info("Logged {0} new release(s) in log file: {1}".format(len(email_list), release_log_file))
 
 			# Send email alert if enabled
 			if notify_via_email:
 				email_body = "\n".join(email_list)
-				log.info("Attempting to send email notification")
+				log.info("Attempting to send email notification to {0}".format(email_to))
 				send_mail(email_body, device)
 
 
