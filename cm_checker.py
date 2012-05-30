@@ -12,8 +12,7 @@ except ImportError:
 	print("Installation instructions: http://www.crummy.com/software/BeautifulSoup")
 	exit(1)
 
-import ConfigParser, getpass, logging, logging.handlers, os, re, smtplib, socket
-from urllib2 import urlopen
+import ConfigParser, getpass, logging, logging.handlers, os, re, smtplib, socket, urllib2
 
 
 ### Configuration ###
@@ -158,8 +157,15 @@ def get_releases(devices):
 				log_list.append(line)
 			log.debug("Read {0} previous release(s) from the log file into log_list".format(len(log_list)))
 
+		# Attempt to download the HTML
+		try:
+			soup = BeautifulSoup(urllib2.urlopen(device_url, timeout=5))
+
+		except urllib2.URLError as error_details:
+			log.error("Unable to connect to {0}: {1}".format(device_url, error_details))
+			raise
+
 		# Find the actual releases and notify if applicable
-		soup = BeautifulSoup(urlopen(device_url))
 		releases = soup.fetch("a", {"href": re.compile("\.zip|\.torrent")})
 		log.debug("Found {0} release(s) on the website".format(len(releases)))
 
